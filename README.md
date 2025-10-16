@@ -1,7 +1,3 @@
-Aqui está uma versão curta, direta e sem emojis do seu README:
-
----
-
 # ClickSeguro — Testes de Segurança Automatizados (OWASP ZAP)
 
 Pipeline de segurança com **OWASP ZAP** integrado ao **GitHub Actions** para detectar vulnerabilidades antes do deploy e **bloquear** pipelines com falhas de severidade **High** ou **Critical**.
