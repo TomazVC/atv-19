@@ -25,72 +25,78 @@ jobs:
       - name: 📦 Instala dependências
         run: npm install
 
-      - name: 🚀 Inicia aplicação ClickSeguro
+      - name: Inicia aplicação ClickSeguro
         run: |
-          echo "🚀 Iniciando aplicação ClickSeguro..."
+          echo "Iniciando aplicação ClickSeguro..."
           npm start &
           APP_PID=$!
           echo "APP_PID=$APP_PID" >> $GITHUB_ENV
           
-          # Aguarda aplicação subir
-          echo "⏳ Aguardando aplicação responder..."
+          echo "Aguardando aplicação responder..."
           for i in {1..30}; do
             if curl -fsS http://localhost:3000/health > /dev/null 2>&1; then
-              echo "✅ Aplicação respondendo!"
+              echo "Aplicação respondendo!"
+              
+              # Testa as rotas vulneráveis
+              echo "Testando rotas vulneráveis:"
+              curl -s http://localhost:3000/ | head -5
+              curl -s "http://localhost:3000/search?q=test" | head -5
+              curl -s "http://localhost:3000/echo?msg=hello" | head -5
+              
               break
             fi
             if [ $i -eq 30 ]; then
-              echo "❌ Timeout: aplicação não respondeu"
+              echo "Timeout: aplicação não respondeu"
               exit 1
             fi
             sleep 2
           done
 
-      - name: OWASP ZAP Full Scan
-        uses: zaproxy/action-full-scan@v0.11.0
-        continue-on-error: true
-        with:
-          target: 'http://localhost:3000'
-          rules_file_name: '.zapbaseline'
-          cmd_options: '-a -j'
+      - name: Obtém IP do host para o Docker acessar
+        run: |
+          HOST_IP=$(hostname -I | awk '{print $1}')
+          echo "HOST_IP=$HOST_IP" >> $GITHUB_ENV
+          echo "IP do host: $HOST_IP"
 
-      - name: Verifica e organiza relatórios do ZAP
+      - name: Executa OWASP ZAP Full Scan via Docker
+        run: |
+          docker run --rm \
+            --network="host" \
+            -v $(pwd):/zap/wrk:rw \
+            -t ghcr.io/zaproxy/zaproxy:stable \
+            zap-full-scan.py \
+            -t http://localhost:3000 \
+            -r zap-report.html \
+            -J zap-report.json \
+            -a \
+            -j \
+            -m 3 \
+            -d || true
+          
+          echo "Scan concluído!"
+          ls -lh zap-report.* 2>/dev/null || echo "Arquivos não encontrados no local esperado"
+
+      - name: Verifica arquivos gerados
         if: always()
         run: |
-          echo "=== Listando todos os arquivos no workspace ==="
-          ls -laR
+          echo "=== Arquivos no diretório atual ==="
+          ls -lah
           echo ""
-          echo "=== Procurando arquivos de relatório ==="
-          find . -type f \( -name "*.html" -o -name "*.json" -o -name "*.md" \) -ls
-          echo ""
-          
-          # O action-full-scan salva os arquivos no workspace root
-          # Vamos copiar para nomes padronizados
-          if [ -f "report_html.html" ]; then
-            cp report_html.html zap-report.html
-            echo "✅ report_html.html -> zap-report.html"
-          elif [ -f "report.html" ]; then
-            cp report.html zap-report.html
-            echo "✅ report.html -> zap-report.html"
+          echo "=== Conteúdo do zap-report.json ==="
+          if [ -f "zap-report.json" ]; then
+            cat zap-report.json | jq '.' || cat zap-report.json
           else
-            echo "⚠️ HTML não encontrado, gerando placeholder"
-            echo "<html><body><h1>Scan executado mas HTML não foi gerado</h1></body></html>" > zap-report.html
+            echo "Arquivo não encontrado!"
           fi
-          
-          if [ -f "report_json.json" ]; then
-            cp report_json.json zap-report.json
-            echo "✅ report_json.json -> zap-report.json"
-          elif [ -f "report.json" ]; then
-            cp report.json zap-report.json
-            echo "✅ report.json -> zap-report.json"
-          else
-            echo "⚠️ JSON não encontrado, gerando estrutura vazia"
-            echo '{"site":[{"alerts":[]}]}' > zap-report.json
-          fi
-          
           echo ""
-          echo "=== Arquivos finais ==="
-          ls -lh zap-report.* 2>/dev/null || echo "Nenhum arquivo zap-report.* criado"
+          echo "=== Verificando zap-report.html ==="
+          if [ -f "zap-report.html" ]; then
+            ls -lh zap-report.html
+            echo "Primeiras linhas:"
+            head -20 zap-report.html
+          else
+            echo "Arquivo HTML não encontrado!"
+          fi
 
       - name: Instala jq para análise
         if: always()
@@ -100,24 +106,17 @@ jobs:
         if: always()
         id: zapcheck
         run: |
-          # Tenta encontrar o arquivo JSON
-          JSON_FILE=""
-          if [ -f "zap-report.json" ]; then
-            JSON_FILE="zap-report.json"
-          elif [ -f "report.json" ]; then
-            JSON_FILE="report.json"
-          else
-            echo "Arquivo JSON não encontrado, criando vazio"
+          if [ ! -f "zap-report.json" ]; then
+            echo "JSON não encontrado, criando estrutura vazia"
             echo '{"site":[{"alerts":[]}]}' > zap-report.json
-            JSON_FILE="zap-report.json"
           fi
 
-          total=$(jq '.site[0].alerts | length' "$JSON_FILE")
-          info=$(jq '[.site[0].alerts[] | select(.riskcode=="0")] | length' "$JSON_FILE")
-          low=$(jq '[.site[0].alerts[] | select(.riskcode=="1")] | length' "$JSON_FILE")
-          medium=$(jq '[.site[0].alerts[] | select(.riskcode=="2")] | length' "$JSON_FILE")
-          high=$(jq '[.site[0].alerts[] | select(.riskcode=="3")] | length' "$JSON_FILE")
-          critical=$(jq '[.site[0].alerts[] | select(.riskcode=="4")] | length' "$JSON_FILE")
+          total=$(jq '.site[0].alerts | length' zap-report.json)
+          info=$(jq '[.site[0].alerts[] | select(.riskcode=="0")] | length' zap-report.json)
+          low=$(jq '[.site[0].alerts[] | select(.riskcode=="1")] | length' zap-report.json)
+          medium=$(jq '[.site[0].alerts[] | select(.riskcode=="2")] | length' zap-report.json)
+          high=$(jq '[.site[0].alerts[] | select(.riskcode=="3")] | length' zap-report.json)
+          critical=$(jq '[.site[0].alerts[] | select(.riskcode=="4")] | length' zap-report.json)
 
           echo "total=$total" >> $GITHUB_OUTPUT
           echo "info=$info" >> $GITHUB_OUTPUT
@@ -126,34 +125,37 @@ jobs:
           echo "high=$high" >> $GITHUB_OUTPUT
           echo "critical=$critical" >> $GITHUB_OUTPUT
 
-          echo "## 🛡️ Relatório de Segurança - ClickSeguro" >> $GITHUB_STEP_SUMMARY
+          echo "## Relatório de Segurança - ClickSeguro" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📋 Resumo de Vulnerabilidades por Severidade:" >> $GITHUB_STEP_SUMMARY
+          echo "### Resumo de Vulnerabilidades por Severidade:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Severidade | Quantidade |" >> $GITHUB_STEP_SUMMARY
           echo "|-----------|------------|" >> $GITHUB_STEP_SUMMARY
-          echo "| 🔴 **Critical** | $critical |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🟠 **High** | $high |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🟡 **Medium** | $medium |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🔵 **Low** | $low |" >> $GITHUB_STEP_SUMMARY
-          echo "| ℹ️ **Info** | $info |" >> $GITHUB_STEP_SUMMARY
+          echo "| Critical | $critical |" >> $GITHUB_STEP_SUMMARY
+          echo "| High | $high |" >> $GITHUB_STEP_SUMMARY
+          echo "| Medium | $medium |" >> $GITHUB_STEP_SUMMARY
+          echo "| Low | $low |" >> $GITHUB_STEP_SUMMARY
+          echo "| Info | $info |" >> $GITHUB_STEP_SUMMARY
           echo "| **Total** | **$total** |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-      - name: 🧷 Top 10 Vulnerabilidades
+      - name: Top 10 Vulnerabilidades
         if: always()
         run: |
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🎯 Top 10 Vulnerabilidades mais Comuns:" >> $GITHUB_STEP_SUMMARY
+          echo "### Top 10 Vulnerabilidades mais Comuns:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          if [ -f "zap-report.json" ]; then
+          if [ -f "zap-report.json" ] && [ "$(jq '.site[0].alerts | length' zap-report.json)" -gt 0 ]; then
             jq -r '.site[0].alerts[] | .name' zap-report.json \
               | sort | uniq -c | sort -nr | head -10 \
               | awk '{count=$1; $1=""; name=substr($0,2); printf "- %s (%d ocorrências)\n", name, count }' \
               >> $GITHUB_STEP_SUMMARY
+          else
+            echo "_Nenhuma vulnerabilidade detectada pelo scan_" >> $GITHUB_STEP_SUMMARY
           fi
 
-      - name: 📦 Upload dos Relatórios (SEMPRE executa)
+      - name: Upload dos Relatórios
         uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -161,30 +163,9 @@ jobs:
           path: |
             zap-report.html
             zap-report.json
-            report*.html
-            report*.json
           retention-days: 30
-          if-no-files-found: warn
 
-      - name: 📋 Instruções para acessar relatórios
-        if: always()
-        run: |
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "---" >> $GITHUB_STEP_SUMMARY
-          echo "## 📄 Relatórios Disponíveis" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Os relatórios foram salvos como **Artifacts** deste workflow." >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🔍 Como acessar:" >> $GITHUB_STEP_SUMMARY
-          echo "1. Role esta página até o **FINAL** 👇" >> $GITHUB_STEP_SUMMARY
-          echo "2. Procure pela seção **\"Artifacts\"**" >> $GITHUB_STEP_SUMMARY
-          echo "3. Clique em **\"zap-report-clickseguro\"** para baixar" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📦 Conteúdo do pacote:" >> $GITHUB_STEP_SUMMARY
-          echo "- \`zap-report.html\` - Relatório visual completo" >> $GITHUB_STEP_SUMMARY
-          echo "- \`zap-report.json\` - Dados estruturados (JSON)" >> $GITHUB_STEP_SUMMARY
-
-      - name: ✅ Verifica critérios de falha
+      - name: Verifica critérios de falha
         if: always()
         run: |
           high=${{ steps.zapcheck.outputs.high }}
@@ -192,25 +173,28 @@ jobs:
           
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "## Análise de Segurança" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           
           if [ "$high" -gt 0 ] || [ "$critical" -gt 0 ]; then
-            echo "## ❌ PIPELINE FALHOU - VULNERABILIDADES CRÍTICAS" >> $GITHUB_STEP_SUMMARY
+            echo "### Status: FALHOU" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Motivo:** Encontradas **$high vulnerabilidades High** e **$critical vulnerabilidades Critical**" >> $GITHUB_STEP_SUMMARY
+            echo "**Vulnerabilidades críticas detectadas:**" >> $GITHUB_STEP_SUMMARY
+            echo "- High: $high" >> $GITHUB_STEP_SUMMARY
+            echo "- Critical: $critical" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "⚠️ O deploy foi **BLOQUEADO** automaticamente por questões de segurança." >> $GITHUB_STEP_SUMMARY
+            echo "O deploy foi bloqueado automaticamente." >> $GITHUB_STEP_SUMMARY
             
             exit 1
           else
-            echo "## ✅ PIPELINE PASSOU - SEGURANÇA OK" >> $GITHUB_STEP_SUMMARY
-            echo "Nenhuma vulnerabilidade crítica detectada!" >> $GITHUB_STEP_SUMMARY
+            echo "### Status: APROVADO" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Nenhuma vulnerabilidade crítica foi detectada." >> $GITHUB_STEP_SUMMARY
           fi
 
-      - name: 🛑 Finaliza aplicação
+      - name: Finaliza aplicação
         if: always()
         run: |
           if [ ! -z "$APP_PID" ]; then
             kill $APP_PID 2>/dev/null || true
           fi
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "🔗 Acesse os artefatos na aba **Actions** > **Este workflow** > **Artifacts**" >> $GITHUB_STEP_SUMMARY
