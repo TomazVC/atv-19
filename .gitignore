@@ -5,6 +5,7 @@ clickseguro-zap.html
 clickseguro-zap.json
 local-zap-report.html
 local-zap-report.json
+*.zip
 
 # Node.js
 node_modules/
