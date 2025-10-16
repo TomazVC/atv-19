@@ -46,12 +46,13 @@ jobs:
             sleep 2
           done
 
-      - name: 🔍 OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.11.0
+      - name: 🔍 OWASP ZAP Full Scan (Ativo)
+        uses: zaproxy/action-full-scan@v0.11.0
         continue-on-error: true
         with:
           target: 'http://localhost:3000'
-          cmd_options: '-a -m 3 -J zap-report.json -r zap-report.html'
+          cmd_options: '-a -j -m 5 -J zap-report.json -r zap-report.html'
+          allow_issue_writing: false
 
       - name: 📊 Instala jq para análise
         if: always()

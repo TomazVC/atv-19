@@ -6,12 +6,28 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 
+// VULNERABILIDADE: Desabilita proteções de segurança
+app.disable('x-powered-by');
+app.use((req, res, next) => {
+  // Adiciona headers vulneráveis propositalmente
+  res.set('X-Powered-by', 'Express/4.18.2'); // Version disclosure
+  // Não define: Content-Security-Policy, X-Frame-Options, X-Content-Type-Options
+  next();
+});
+
 // ========================================
 // ROTAS SEGURAS
 // ========================================
 
 // Página inicial
 app.get('/', (req, res) => {
+  // VULNERABILIDADE: Cookie inseguro
+  res.cookie('sessionid', 'abc123', { 
+    secure: false,  // Não requer HTTPS
+    httpOnly: false, // Acessível via JavaScript
+    sameSite: 'none' // Permite CSRF
+  });
+  
   res.send(`
     <!DOCTYPE html>
     <html>
