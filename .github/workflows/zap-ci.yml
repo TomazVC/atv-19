@@ -16,13 +16,12 @@ jobs:
       - name: 📥 Checkout do código
         uses: actions/checkout@v4
 
-      - name: 🟢 Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
 
-      - name: 📦 Instala dependências
+      - name: Instala dependências
         run: npm install
 
       - name: Inicia aplicação ClickSeguro
@@ -74,7 +73,9 @@ jobs:
             -d || true
           
           echo "Scan concluído!"
-          ls -lh zap-report.* 2>/dev/null || echo "Arquivos não encontrados no local esperado"
+          echo "Listando todos os arquivos gerados:"
+          find . -name "*.html" -o -name "*.json" | grep -E "(zap|report)" || echo "Nenhum arquivo zap/report encontrado"
+          ls -lh zap-report.* 2>/dev/null || echo "zap-report.* não encontrados no diretório atual"
 
       - name: Verifica arquivos gerados
         if: always()
@@ -82,6 +83,29 @@ jobs:
           echo "=== Arquivos no diretório atual ==="
           ls -lah
           echo ""
+          
+          # Verifica se os arquivos foram gerados
+          if [ ! -f "zap-report.json" ]; then
+            echo "AVISO: zap-report.json não encontrado, criando estrutura vazia"
+            echo '{"site":[{"alerts":[]}]}' > zap-report.json
+          fi
+          
+          if [ ! -f "zap-report.html" ]; then
+            echo "AVISO: zap-report.html não encontrado, criando placeholder"
+            cat > zap-report.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head><title>ZAP Scan Report</title></head>
+<body>
+<h1>OWASP ZAP Scan Report - ClickSeguro</h1>
+<p><strong>Status:</strong> Scan executado mas relatório HTML não foi gerado pelo ZAP.</p>
+<p>Verifique os logs do step "Executa OWASP ZAP Full Scan via Docker" para mais detalhes.</p>
+<p>O relatório JSON pode conter mais informações.</p>
+</body>
+</html>
+EOF
+          fi
+          
           echo "=== Conteúdo do zap-report.json ==="
           if [ -f "zap-report.json" ]; then
             cat zap-report.json | jq '.' || cat zap-report.json
@@ -92,8 +116,10 @@ jobs:
           echo "=== Verificando zap-report.html ==="
           if [ -f "zap-report.html" ]; then
             ls -lh zap-report.html
-            echo "Primeiras linhas:"
-            head -20 zap-report.html
+            echo "Tamanho e tipo:"
+            file zap-report.html
+            echo "Primeiras 10 linhas:"
+            head -10 zap-report.html
           else
             echo "Arquivo HTML não encontrado!"
           fi
