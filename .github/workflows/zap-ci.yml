@@ -24,44 +24,70 @@ jobs:
       - name: Instala dependências
         run: npm install
 
-      - name: Inicia aplicação ClickSeguro
+      - name: Inicia aplicação ClickSeguro em background
         run: |
-          echo "Iniciando aplicação ClickSeguro..."
-          npm start &
+          echo "Iniciando aplicação ClickSeguro na porta 3000..."
+          nohup npm start > app.log 2>&1 &
           APP_PID=$!
           echo "APP_PID=$APP_PID" >> $GITHUB_ENV
+          echo "Aplicação iniciada com PID: $APP_PID"
           
           echo "Aguardando aplicação responder..."
-          for i in {1..30}; do
+          for i in {1..60}; do
             if curl -fsS http://localhost:3000/health > /dev/null 2>&1; then
-              echo "Aplicação respondendo!"
+              echo "Aplicação respondendo com sucesso!"
               
-              # Testa as rotas vulneráveis
               echo "Testando rotas vulneráveis:"
-              curl -s http://localhost:3000/ | head -5
-              curl -s "http://localhost:3000/search?q=test" | head -5
-              curl -s "http://localhost:3000/echo?msg=hello" | head -5
+              echo "1. Rota principal:"
+              curl -s http://localhost:3000/ | head -3
               
-              break
+              echo "2. Rota de busca (SQLi):"
+              curl -s "http://localhost:3000/search?q=test" | head -3
+              
+              echo "3. Rota echo (XSS):"
+              curl -s "http://localhost:3000/echo?msg=hello" | head -3
+              
+              echo "4. Rota admin (Path Traversal):"
+              curl -s "http://localhost:3000/admin?file=test.txt" | head -3
+              
+              echo "Aplicação está operacional!"
+              exit 0
             fi
-            if [ $i -eq 30 ]; then
-              echo "Timeout: aplicação não respondeu"
+            
+            if [ $i -eq 60 ]; then
+              echo "ERRO: Timeout - aplicação não respondeu após 60 tentativas"
+              echo "Logs da aplicação:"
+              cat app.log
               exit 1
             fi
+            
             sleep 2
           done
 
-      - name: Obtém IP do host para o Docker acessar
+      - name: Verifica conectividade antes do scan
         run: |
-          HOST_IP=$(hostname -I | awk '{print $1}')
-          echo "HOST_IP=$HOST_IP" >> $GITHUB_ENV
-          echo "IP do host: $HOST_IP"
+          echo "Verificando conectividade com a aplicação..."
+          
+          echo "IP local:"
+          hostname -I
+          
+          echo "Portas abertas:"
+          ss -tlnp | grep 3000 || echo "Porta 3000 não encontrada"
+          
+          echo "Teste de conectividade:"
+          curl -v http://localhost:3000/health || echo "ERRO: Não foi possível conectar"
 
-      - name: Executa OWASP ZAP Full Scan via Docker
+      - name: Executa OWASP ZAP Full Scan com logs detalhados
         run: |
+          echo "Iniciando OWASP ZAP Full Scan..."
+          echo "Alvo: http://localhost:3000"
+          echo "Hora de início: $(date)"
+          
+          # Executa ZAP e captura saída
           docker run --rm \
             --network="host" \
             -v $(pwd):/zap/wrk:rw \
+            -u root \
             -t ghcr.io/zaproxy/zaproxy:stable \
             zap-full-scan.py \
             -t http://localhost:3000 \
@@ -69,53 +95,81 @@ jobs:
             -J zap-report.json \
             -a \
             -j \
-            -m 3 \
-            -d || true
+            -m 10 \
+            -T 600 \
+            -z "-config spider.maxDuration=5 -config ajaxSpider.maxDuration=5" \
+            2>&1 | tee zap-scan.log
           
-          echo "Scan concluído!"
-          echo "Listando todos os arquivos gerados:"
-          find . -name "*.html" -o -name "*.json" | grep -E "(zap|report)" || echo "Nenhum arquivo zap/report encontrado"
-          ls -lh zap-report.* 2>/dev/null || echo "zap-report.* não encontrados no diretório atual"
+          ZAP_EXIT=$?
+          echo "ZAP exit code: $ZAP_EXIT"
+          echo "Hora de término: $(date)"
+          
+          echo "Últimas 50 linhas do log do ZAP:"
+          tail -50 zap-scan.log
+          
+          if [ $ZAP_EXIT -ne 0 ] && [ $ZAP_EXIT -ne 2 ]; then
+            echo "AVISO: ZAP retornou código de erro $ZAP_EXIT"
+          fi
 
-      - name: Verifica arquivos gerados
+      - name: Verifica e valida arquivos gerados
         if: always()
         run: |
-          echo "=== Arquivos no diretório atual ==="
-          ls -lah
-          echo ""
+          echo "=== Verificando arquivos gerados pelo ZAP ==="
           
-          # Verifica se os arquivos foram gerados
-          if [ ! -f "zap-report.json" ]; then
-            echo "AVISO: zap-report.json não encontrado, criando estrutura vazia"
+          echo "Todos os arquivos no diretório:"
+          ls -lah
+          
+          echo ""
+          echo "Buscando arquivos do ZAP em todo workspace:"
+          find . -name "*.html" -o -name "*.json" -o -name "*.log" 2>/dev/null
+          
+          echo ""
+          echo "=== Análise do zap-report.json ==="
+          if [ -f "zap-report.json" ]; then
+            echo "Arquivo encontrado!"
+            echo "Tamanho: $(wc -c < zap-report.json) bytes"
+            echo "Conteúdo:"
+            cat zap-report.json
+            
+            # Verifica se tem conteúdo real
+            ALERTS=$(jq '.site[0].alerts | length' zap-report.json 2>/dev/null || echo "0")
+            echo "Total de alertas: $ALERTS"
+            
+            if [ "$ALERTS" -eq 0 ]; then
+              echo "AVISO: JSON gerado mas sem alertas!"
+              echo "Verificando logs do ZAP para diagnóstico..."
+              if [ -f "zap-scan.log" ]; then
+                echo "Procurando por erros no log:"
+                grep -i "error\|exception\|failed" zap-scan.log | head -20
+              fi
+            fi
+          else
+            echo "ERRO: zap-report.json NÃO foi criado!"
+            echo "Criando placeholder..."
             echo '{"site":[{"alerts":[]}]}' > zap-report.json
           fi
           
-          if [ ! -f "zap-report.html" ]; then
-            echo "AVISO: zap-report.html não encontrado, criando placeholder"
-            echo '<!DOCTYPE html>' > zap-report.html
-            echo '<html><head><title>ZAP Scan Report</title></head><body>' >> zap-report.html
-            echo '<h1>OWASP ZAP Scan Report - ClickSeguro</h1>' >> zap-report.html
-            echo '<p><strong>Status:</strong> Scan executado mas relatório HTML não foi gerado pelo ZAP.</p>' >> zap-report.html
-            echo '<p>Verifique os logs do workflow para mais detalhes.</p>' >> zap-report.html
-            echo '</body></html>' >> zap-report.html
-          fi
-          
-          echo "=== Conteúdo do zap-report.json ==="
-          if [ -f "zap-report.json" ]; then
-            cat zap-report.json | jq '.' || cat zap-report.json
-          else
-            echo "Arquivo não encontrado!"
-          fi
           echo ""
-          echo "=== Verificando zap-report.html ==="
+          echo "=== Análise do zap-report.html ==="
           if [ -f "zap-report.html" ]; then
-            ls -lh zap-report.html
-            echo "Tamanho e tipo:"
-            file zap-report.html
+            echo "Arquivo encontrado!"
+            echo "Tamanho: $(wc -c < zap-report.html) bytes"
             echo "Primeiras 10 linhas:"
             head -10 zap-report.html
+            
+            # Verifica se é o HTML real do ZAP
+            if grep -q "ZAP Scanning Report" zap-report.html; then
+              echo "HTML REAL do ZAP detectado!"
+            else
+              echo "AVISO: HTML não parece ser relatório real do ZAP"
+            fi
           else
-            echo "Arquivo HTML não encontrado!"
+            echo "ERRO: zap-report.html NÃO foi criado!"
+            echo "Criando placeholder..."
+            echo '<!DOCTYPE html><html><head><title>ZAP Report</title></head>' > zap-report.html
+            echo '<body><h1>OWASP ZAP Scan Report - ClickSeguro</h1>' >> zap-report.html
+            echo '<p><strong>Status:</strong> Scan executado mas relatório HTML não foi gerado pelo ZAP</p>' >> zap-report.html
+            echo '<p>Verifique os logs do workflow para mais detalhes.</p></body></html>' >> zap-report.html
           fi
 
       - name: Instala jq para análise
@@ -175,7 +229,7 @@ jobs:
             echo "_Nenhuma vulnerabilidade detectada pelo scan_" >> $GITHUB_STEP_SUMMARY
           fi
 
-      - name: Upload dos Relatórios
+      - name: Upload dos Relatórios e Logs
         uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -183,6 +237,8 @@ jobs:
           path: |
             zap-report.html
             zap-report.json
+            zap-scan.log
+            app.log
           retention-days: 30
 
       - name: Verifica critérios de falha
@@ -216,5 +272,6 @@ jobs:
         if: always()
         run: |
           if [ ! -z "$APP_PID" ]; then
+            echo "Finalizando aplicação (PID: $APP_PID)"
             kill $APP_PID 2>/dev/null || true
           fi
