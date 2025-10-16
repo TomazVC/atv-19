@@ -92,18 +92,12 @@ jobs:
           
           if [ ! -f "zap-report.html" ]; then
             echo "AVISO: zap-report.html não encontrado, criando placeholder"
-            cat > zap-report.html << 'EOF'
-<!DOCTYPE html>
-<html>
-<head><title>ZAP Scan Report</title></head>
-<body>
-<h1>OWASP ZAP Scan Report - ClickSeguro</h1>
-<p><strong>Status:</strong> Scan executado mas relatório HTML não foi gerado pelo ZAP.</p>
-<p>Verifique os logs do step "Executa OWASP ZAP Full Scan via Docker" para mais detalhes.</p>
-<p>O relatório JSON pode conter mais informações.</p>
-</body>
-</html>
-EOF
+            echo '<!DOCTYPE html>' > zap-report.html
+            echo '<html><head><title>ZAP Scan Report</title></head><body>' >> zap-report.html
+            echo '<h1>OWASP ZAP Scan Report - ClickSeguro</h1>' >> zap-report.html
+            echo '<p><strong>Status:</strong> Scan executado mas relatório HTML não foi gerado pelo ZAP.</p>' >> zap-report.html
+            echo '<p>Verifique os logs do workflow para mais detalhes.</p>' >> zap-report.html
+            echo '</body></html>' >> zap-report.html
           fi
           
           echo "=== Conteúdo do zap-report.json ==="
