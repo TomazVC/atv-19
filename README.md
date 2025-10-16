@@ -1,500 +1,961 @@
-# ClickSeguro - Testes de Segurança Automatizados com OWASP ZAP# ClickSeguro - Testes de Segurança Automatizados com OWASP ZAP# ClickSeguro - Testes de Segurança Automatizados com OWASP ZAP
+# ClickSeguro - Testes de Segurança Automatizados com OWASP ZAP# ClickSeguro - Testes de Segurança Automatizados com OWASP ZAP
 
 
 
-## Sobre o Projeto
+## Sobre o Projeto## Sobre o Projeto
 
 
 
-Implementação completa de pipeline de segurança automatizado utilizando OWASP ZAP CLI integrado ao GitHub Actions. O projeto demonstra como detectar vulnerabilidades antes do deploy e bloquear pipelines com falhas críticas de segurança.## Sobre o Projeto## Sobre o Projeto
+Implementação completa de pipeline de segurança automatizado utilizando OWASP ZAP CLI integrado ao GitHub Actions. O projeto demonstra como detectar vulnerabilidades antes do deploy e bloquear pipelines com falhas críticas de segurança.Implementação completa de pipeline de segurança automatizado utilizando OWASP ZAP CLI integrado ao GitHub Actions. O projeto demonstra como detectar vulnerabilidades antes do deploy e bloquear pipelines com falhas críticas de segurança.
 
 
 
-**Contexto:** Plataforma web ClickSeguro para agendamento de serviços residenciais.
+**Contexto:** Plataforma web ClickSeguro para agendamento de serviços residenciais.**Contexto:** Plataforma web ClickSeguro para agendamento de serviços residenciais.
 
 
 
-**Problema:** Vulnerabilidades chegando à produção sem detecção prévia.Implementação completa de pipeline de segurança automatizado utilizando OWASP ZAP CLI integrado ao GitHub Actions. O projeto demonstra como detectar vulnerabilidades antes do deploy e bloquear pipelines com falhas críticas de segurança.Implementação de pipeline de segurança automatizado utilizando OWASP ZAP CLI integrado ao GitHub Actions para detecção de vulnerabilidades antes do deploy em produção.
+**Problema:** Vulnerabilidades chegando à produção sem detecção prévia.**Problema:** Vulnerabilidades chegando à produção sem detecção prévia.
 
 
 
-**Solução:** Pipeline automatizado que executa testes de segurança em cada push/PR e bloqueia deploys inseguros.
+**Solução:** Pipeline automatizado que executa testes de segurança em cada push/PR e bloqueia deploys inseguros.**Solução:** Pipeline automatizado que executa testes de segurança em cada push/PR e bloqueia deploys inseguros.
 
 
 
----**Contexto:** Plataforma web ClickSeguro para agendamento de serviços residenciais.**Contexto:** Plataforma web ClickSeguro para agendamento de serviços residenciais.
+------
 
 
 
-## Estrutura do Projeto
+## Estrutura do Projeto## Estrutura do Projeto
 
 
 
-```**Problema:** Vulnerabilidades chegando à produção sem detecção prévia.**Objetivo:** Integrar testes de segurança automatizados no pipeline de CI/CD para bloquear deploys com vulnerabilidades críticas.
+``````
 
-atv-19/
+atv-19/atv-19/
 
-├── .github/workflows/
+├── .github/workflows/├── .github/workflows/
 
-│   └── zap-ci.yml           # Pipeline OWASP ZAP
+│   └── zap-ci.yml           # Pipeline OWASP ZAP│   └── zap-ci.yml           # Pipeline OWASP ZAP
 
-├── app.js                   # Aplicação vulnerável (Node.js/Express)**Solução:** Pipeline automatizado que executa testes de segurança em cada push/PR e bloqueia deploys inseguros.---
+├── app.js                   # Aplicação vulnerável (Node.js/Express)├── app.js                   # Aplicação vulnerável (Node.js/Express)
 
-├── package.json             # Dependências do projeto
+├── package.json             # Dependências do projeto├── package.json             # Dependências do projeto
 
-├── Dockerfile               # Container para testes locais
+├── Dockerfile               # Container para testes locais├── Dockerfile               # Container para testes locais
 
-├── .zapbaseline             # Configuração do ZAP
+├── .zapbaseline             # Configuração do ZAP├── .zapbaseline             # Configuração do ZAP
 
-├── .gitignore               # Arquivos ignorados---## Requisitos da Atividade
+├── .gitignore               # Arquivos ignorados├── .gitignore               # Arquivos ignorados
 
-└── README.md                # Esta documentação
+└── README.md                # Documentação└── README.md                # Documentação
 
-```
-
-
-
----## Estrutura do ProjetoEste projeto implementa as seguintes tarefas:
+``````
 
 
 
-## Requisitos Implementados
+------
 
 
 
-### 1. Configuração Inicial do OWASP ZAP CLI```1. **Configuração inicial do OWASP ZAP CLI**
+## Requisitos da Atividade## Requisitos da Atividade
 
 
 
-**Implementação:**atv-19/   - Workflow configurado no GitHub Actions
+### 1. Configuração do OWASP ZAP CLI no GitHub Actions└── README.md                # Esta documentação
+
+
+
+**Implementação:**```
 
 - Workflow configurado em `.github/workflows/zap-ci.yml`
 
-- Execução automática em push/PR para branches `main` e `develop`├── .github/workflows/   - Scan automático contra aplicação local
+- Execução automática em push/PR para branches `main` e `develop`
 
 - Scan contra aplicação local rodando em `http://localhost:3000`
 
-- Geração de relatórios HTML e JSON│   └── zap-ci.yml           # Pipeline OWASP ZAP   - Geração de relatórios HTML e JSON
+- Geração de relatórios HTML e JSON---## Estrutura do ProjetoEste projeto implementa as seguintes tarefas:
 
 
 
-**Arquivo:** `.github/workflows/zap-ci.yml`├── app.js                   # Aplicação vulnerável (Node.js/Express)
+**Arquivo:** `.github/workflows/zap-ci.yml`
 
 
 
-```yaml├── package.json             # Dependências do projeto2. **Validação automática de vulnerabilidades**
+```yaml## Requisitos Implementados
 
-- name: OWASP ZAP Full Scan
+- name: Executa OWASP ZAP Full Scan via Docker
 
-  uses: zaproxy/action-full-scan@v0.11.0├── Dockerfile               # Container para testes locais   - Pipeline falha automaticamente para severidade High/Critical
+  run: |
 
-  with:
+    docker run --rm \
 
-    target: 'http://localhost:3000'├── .zapbaseline             # Configuração do ZAP   - Bloqueio de deploy baseado em riscos
+      --network="host" \### 1. Configuração Inicial do OWASP ZAP CLI```1. **Configuração inicial do OWASP ZAP CLI**
 
-    cmd_options: '-a -j -m 5 -J zap-report.json -r zap-report.html'
+      -v $(pwd):/zap/wrk:rw \
 
-```├── .gitignore               # Arquivos ignorados
+      -t ghcr.io/zaproxy/zaproxy:stable \
 
+      zap-full-scan.py \
 
+      -t http://localhost:3000 \**Implementação:**atv-19/   - Workflow configurado no GitHub Actions
 
-**Observação:** Utiliza Full Scan (ativo) para detectar vulnerabilidades como XSS e SQL Injection que requerem teste ativo.└── README.md                # Esta documentação3. **Análise dos resultados**
+      -r zap-report.html \
 
+      -J zap-report.json \- Workflow configurado em `.github/workflows/zap-ci.yml`
 
+      -a -j -m 3 -d || true
 
----```   - Contagem total de alertas
-
-
-
-### 2. Validação Automática de Vulnerabilidades   - Distribuição por severidade (Critical, High, Medium, Low, Info)
-
-
-
-**Implementação:**---   - Identificação dos tipos mais comuns de vulnerabilidades
-
-- Pipeline analisa o arquivo JSON gerado pelo ZAP
-
-- Conta vulnerabilidades por severidade (riskcode)
-
-- **Falha automaticamente** se encontrar High (riskcode=3) ou Critical (riskcode=4)
-
-- Deploy é bloqueado em caso de vulnerabilidades críticas## Requisitos Implementados4. **Teste com vulnerabilidade proposital**
+```- Execução automática em push/PR para branches `main` e `develop`├── .github/workflows/   - Scan automático contra aplicação local
 
 
 
-**Lógica de Bloqueio:**   - Aplicação Node.js com vulnerabilidades intencionais
+**Observação:** Utiliza Docker direto com Full Scan (ativo) para detectar vulnerabilidades que requerem teste ativo (XSS, SQL Injection, etc).- Scan contra aplicação local rodando em `http://localhost:3000`
 
 
 
-```bash### 1. Configuração Inicial do OWASP ZAP CLI   - XSS Refletido, SQL Injection, Path Traversal
-
-if [ "$high" -gt 0 ] || [ "$critical" -gt 0 ]; then
-
-  echo "Vulnerabilidades críticas detectadas!"
-
-  exit 1  # Falha o pipeline
-
-fi**Implementação:**5. **Aprimoramento do pipeline**
-
-```
-
-- Workflow configurado em `.github/workflows/zap-ci.yml`   - Relatórios salvos como artifacts do GitHub Actions
-
-**Critérios:**
-
-- Execução automática em push/PR para branches `main` e `develop`   - Retenção de 30 dias para auditoria
-
-| Risk Code | Severidade | Comportamento |
-
-|-----------|------------|---------------|- Scan contra aplicação local rodando em `http://localhost:3000`
-
-| 4 | Critical | BLOQUEIA pipeline |
-
-| 3 | High | BLOQUEIA pipeline |- Geração de relatórios HTML e JSON---
-
-| 2 | Medium | Pipeline continua |
-
-| 1 | Low | Pipeline continua |
-
-| 0 | Info | Pipeline continua |
-
-**Arquivo:** `.github/workflows/zap-ci.yml`## Estrutura do Projeto
-
----
+### 2. Validação Automática de Vulnerabilidades- Geração de relatórios HTML e JSON│   └── zap-ci.yml           # Pipeline OWASP ZAP   - Geração de relatórios HTML e JSON
 
 
-
-### 3. Análise dos Resultados
-
-```yaml```
 
 **Implementação:**
 
-- Contagem total de alertas encontrados- name: OWASP ZAP Baseline Scanatv-19/
-
-- Distribuição por nível de severidade
-
-- Identificação dos 10 tipos mais comuns de vulnerabilidades  uses: zaproxy/action-baseline@v0.11.0├── .github/workflows/
-
-- Relatório detalhado no GitHub Actions Summary
-
-  with:│   └── zap-ci.yml           # Pipeline OWASP ZAP
-
-**Exemplo de Saída:**
-
-    target: 'http://localhost:3000'├── app.js                   # Aplicação vulnerável (Node.js/Express)
-
-```
-
-Resumo de Vulnerabilidades por Severidade:    cmd_options: '-a -m 3 -J zap-report.json -r zap-report.html'├── package.json             # Dependências
-
-
-
-| Severidade | Quantidade |```├── Dockerfile               # Container para testes
-
-|-----------|------------|
-
-| Critical  | 0          |├── .zapbaseline             # Configuração do ZAP
-
-| High      | 3          |
-
-| Medium    | 7          |---└── README.md                # Documentação
-
-| Low       | 12         |
-
-| Info      | 4          |└── 📖 README.md                      # Este arquivo
-
-| Total     | 26         |
-
-### 2. Validação Automática de Vulnerabilidades```
-
-Top 10 Vulnerabilidades mais Comuns:
-
-- Cross-Site Scripting (XSS) (3 ocorrências)
-
-- SQL Injection (2 ocorrências)
-
-- Missing Security Headers (8 ocorrências)**Implementação:**---
-
-```
-
 - Pipeline analisa o arquivo JSON gerado pelo ZAP
 
-**Comando para análise local:**
+- Conta vulnerabilidades por severidade (riskcode 0-4)**Arquivo:** `.github/workflows/zap-ci.yml`├── app.js                   # Aplicação vulnerável (Node.js/Express)
 
-- Conta vulnerabilidades por severidade (riskcode)## 🔧 Workflows Disponíveis
-
-```bash
-
-# Total de alertas- **Falha automaticamente** se encontrar High (riskcode=3) ou Critical (riskcode=4)
-
-jq '.site[0].alerts | length' zap-report.json
-
-- Deploy é bloqueado em caso de vulnerabilidades críticas### 1. `zap-ci.yml` - Pipeline Principal
-
-# Vulnerabilidades High/Critical
-
-jq '[.site[0].alerts[] | select(.riskcode=="3" or .riskcode=="4")] | length' zap-report.json- **Alvo:** OWASP Juice Shop (aplicação vulnerável conhecida)
+- Falha automaticamente se detectar High (riskcode=3) ou Critical (riskcode=4)
 
 
 
-# Listar tipos**Lógica de Bloqueio:**- **Tipo:** Baseline Scan (passivo + spider)
+**Código:**
 
-jq -r '.site[0].alerts[] | .name' zap-report.json | sort | uniq -c | sort -nr
+```yaml├── package.json             # Dependências do projeto2. **Validação automática de vulnerabilidades**
 
-```- **Duração:** ~5-7 minutos
+```yaml
 
+- name: Verifica critérios de falha- name: OWASP ZAP Full Scan
 
+  if: always()
 
-**Exemplo de Análise Real:**```bash- **Uso:** Validação geral do pipeline
+  run: |  uses: zaproxy/action-full-scan@v0.11.0├── Dockerfile               # Container para testes locais   - Pipeline falha automaticamente para severidade High/Critical
 
+    high=${{ steps.zapcheck.outputs.high }}
 
+    critical=${{ steps.zapcheck.outputs.critical }}  with:
 
-Após executar o pipeline contra a aplicação ClickSeguro, obtemos resultados como:if [ "$high" -gt 0 ] || [ "$critical" -gt 0 ]; then
+    
 
+    if [ "$high" -gt 0 ] || [ "$critical" -gt 0 ]; then    target: 'http://localhost:3000'├── .zapbaseline             # Configuração do ZAP   - Bloqueio de deploy baseado em riscos
 
+      echo "### Status: FALHOU"
 
-```  echo "Vulnerabilidades críticas detectadas!"### 2. `zap-vulnerable-app.yml` - App ClickSeguro
+      echo "Vulnerabilidades críticas detectadas"    cmd_options: '-a -j -m 5 -J zap-report.json -r zap-report.html'
 
-Resumo Detalhado de Vulnerabilidades:
+      exit 1
 
-  exit 1  # Falha o pipeline- **Alvo:** Aplicação Node.js customizada
+    else```├── .gitignore               # Arquivos ignorados
 
-| Severidade | Quantidade | Descrição |
+      echo "### Status: APROVADO"
 
-|-----------|------------|-----------|fi- **Vulnerabilidades:** XSS, SQL Injection, Path Traversal
+      echo "Nenhuma vulnerabilidade crítica detectada"
 
-| Critical  | 0          | Nenhuma vulnerabilidade crítica |
+    fi
 
-| High      | 3          | XSS, SQL Injection, Path Traversal |```- **Duração:** ~3-5 minutos  
-
-| Medium    | 7          | Cookie sem flag secure, Version disclosure |
-
-| Low       | 12         | Headers ausentes, Informações expostas |- **Uso:** Teste com vulnerabilidades específicas
-
-| Info      | 4          | Avisos informativos |
-
-| Total     | 26         | Total de alertas encontrados |**Critérios:**
+```**Observação:** Utiliza Full Scan (ativo) para detectar vulnerabilidades como XSS e SQL Injection que requerem teste ativo.└── README.md                # Esta documentação3. **Análise dos resultados**
 
 
 
-Top 10 Vulnerabilidades Detectadas:---
+**Resultado:** Deploy é bloqueado automaticamente se vulnerabilidades críticas forem encontradas.
 
 
 
-1. Cross-Site Scripting (XSS) - 3 ocorrências| Risk Code | Severidade | Comportamento |
-
-   Localização: /echo, /search, /admin
-
-   Severidade: High|-----------|------------|---------------|## 🎯 Vulnerabilidades Implementadas
-
-   
-
-2. SQL Injection - 2 ocorrências| 4 | Critical | BLOQUEIA pipeline |
-
-   Localização: /search, /user
-
-   Severidade: High| 3 | High | BLOQUEIA pipeline |### 1. **XSS Refletido**
-
-   
-
-3. Path Traversal - 1 ocorrência| 2 | Medium | Pipeline continua |```
-
-   Localização: /admin?file=
-
-   Severidade: High| 1 | Low | Pipeline continua |URL: /echo?q=<script>alert('XSS')</script>
-
-   
-
-4. Missing Anti-clickjacking Header - 8 ocorrências| 0 | Info | Pipeline continua |Severidade: High
-
-   Headers: X-Frame-Options ausente
-
-   Severidade: MediumDescrição: Entrada não sanitizada refletida na página
-
-   
-
-5. Cookie Without Secure Flag - 5 ocorrências---```
-
-   Cookies: sessionid, user_pref
-
-   Severidade: Medium
-
-   
-
-6. Server Leaks Version Information - 2 ocorrências### 3. Análise dos Resultados### 2. **SQL Injection Simulado**
-
-   Header: X-Powered-By: Express/4.18.2
-
-   Severidade: Low```
+### 3. Análise dos Resultados---```   - Contagem total de alertas
 
 
 
-Resultado: Pipeline FALHOU devido a 3 vulnerabilidades High**Implementação:**URL: /search?service=' OR '1'='1
+**Implementação:**
+
+- Parsing do JSON com `jq`
+
+- Contagem total de alertas### 2. Validação Automática de Vulnerabilidades   - Distribuição por severidade (Critical, High, Medium, Low, Info)
+
+- Distribuição por severidade (Critical, High, Medium, Low, Info)
+
+- Top 10 vulnerabilidades mais comuns
+
+
+
+**Arquivo:** `zap-report.json`**Implementação:**---   - Identificação dos tipos mais comuns de vulnerabilidades
+
+
+
+```json- Pipeline analisa o arquivo JSON gerado pelo ZAP
+
+{
+
+  "site": [{- Conta vulnerabilidades por severidade (riskcode)
+
+    "alerts": [
+
+      {- **Falha automaticamente** se encontrar High (riskcode=3) ou Critical (riskcode=4)
+
+        "name": "SQL Injection",
+
+        "riskcode": "3",- Deploy é bloqueado em caso de vulnerabilidades críticas## Requisitos Implementados4. **Teste com vulnerabilidade proposital**
+
+        "confidence": "2",
+
+        "riskdesc": "High (Medium)",
+
+        "desc": "...",
+
+        "instances": [...]**Lógica de Bloqueio:**   - Aplicação Node.js com vulnerabilidades intencionais
+
+      }
+
+    ]
+
+  }]
+
+}```bash### 1. Configuração Inicial do OWASP ZAP CLI   - XSS Refletido, SQL Injection, Path Traversal
 
 ```
 
-- Contagem total de alertas encontradosSeveridade: High  
+if [ "$high" -gt 0 ] || [ "$critical" -gt 0 ]; then
 
-Este exemplo demonstra como o ZAP identifica e classifica as vulnerabilidades, permitindo análise detalhada antes do deploy.
+**Tabela gerada no GitHub Actions Summary:**
 
-- Distribuição por nível de severidadeDescrição: Query SQL construída sem sanitização
-
----
-
-- Identificação dos 10 tipos mais comuns de vulnerabilidades```
-
-### 4. Teste com Vulnerabilidade Proposital
-
-- Relatório detalhado no GitHub Actions Summary
-
-**Aplicação Desenvolvida:** Node.js com Express (`app.js`)
-
-### 3. **Path Traversal**
-
-#### Vulnerabilidades Implementadas:
-
-**Exemplo de Saída:**```
-
-**A) XSS Refletido (High)**
-
-URL: /admin?file=../../../etc/passwd
-
-```javascript
-
-app.get('/echo', (req, res) => {```Severidade: Medium
-
-  const userInput = req.query.q || '';
-
-  // VULNERÁVEL: Sem sanitizaçãoResumo de Vulnerabilidades por Severidade:Descrição: Acesso a arquivos fora do diretório permitido
-
-  res.send(`<div>${userInput}</div>`);
-
-});```
-
-```
+  echo "Vulnerabilidades críticas detectadas!"
 
 | Severidade | Quantidade |
 
-**Teste:** `http://localhost:3000/echo?q=<script>alert('XSS')</script>`
+|-----------|------------|  exit 1  # Falha o pipeline
 
-|-----------|------------|### 4. **Headers de Segurança Ausentes**
+| Critical  | 0          |
 
----
+| High      | 0          |fi**Implementação:**5. **Aprimoramento do pipeline**
 
-| Critical  | 0          |```
+| Medium    | 0          |
 
-**B) SQL Injection (High)**
+| Low       | 0          |```
 
-| High      | 3          |Missing: Content-Security-Policy, X-Frame-Options, X-Content-Type-Options
+| Info      | 0          |
 
-```javascript
-
-app.get('/search', (req, res) => {| Medium    | 7          |Severidade: Low/Medium
-
-  const service = req.query.service || '';
-
-  // VULNERÁVEL: Query sem prepared statement| Low       | 12         |Descrição: Falta de cabeçalhos de segurança padrão
-
-  const query = `SELECT * FROM services WHERE name = '${service}'`;
-
-  res.send(`Query: ${query}`);| Info      | 4          |```
-
-});
-
-```| Total     | 26         |
+| **Total** | **0**      |- Workflow configurado em `.github/workflows/zap-ci.yml`   - Relatórios salvos como artifacts do GitHub Actions
 
 
 
-**Teste:** `http://localhost:3000/search?service=' OR '1'='1`---
+**Status Atual:** Nenhuma vulnerabilidade detectada (requer investigação - veja seção de Troubleshooting).**Critérios:**
 
 
 
----Top 10 Vulnerabilidades mais Comuns:
+### 4. Inserção de Vulnerabilidade Proposital- Execução automática em push/PR para branches `main` e `develop`   - Retenção de 30 dias para auditoria
 
 
 
-**C) Path Traversal (High)**- Cross-Site Scripting (XSS) (3 ocorrências)## 📊 Como Funciona o Pipeline
+**Implementação:**| Risk Code | Severidade | Comportamento |
 
+- Aplicação `app.js` contém vulnerabilidades intencionais para teste
 
+|-----------|------------|---------------|- Scan contra aplicação local rodando em `http://localhost:3000`
 
-```javascript- SQL Injection (2 ocorrências)
+**Vulnerabilidades implementadas:**
 
-app.get('/admin', (req, res) => {
+| 4 | Critical | BLOQUEIA pipeline |
 
-  const file = req.query.file || 'dashboard.html';- Missing Security Headers (8 ocorrências)### Fluxo Automático:
+#### a) Cross-Site Scripting (XSS)
 
-  // VULNERÁVEL: Sem validação de path
+```javascript| 3 | High | BLOQUEIA pipeline |- Geração de relatórios HTML e JSON---
 
-  const filePath = `/var/www/admin/${file}`;```
+app.get('/echo', (req, res) => {
 
-  res.send(`Acessando: ${filePath}`);
+  const message = req.query.msg;| 2 | Medium | Pipeline continua |
 
-});1. **🚀 Trigger:** Push/PR para `main` ou `develop`
+  res.send(`<h1>Echo: ${message}</h1>`); // XSS - sem sanitização
+
+});| 1 | Low | Pipeline continua |
 
 ```
 
-**Comando para análise local:**2. **📦 Setup:** Instala dependências e sobe aplicação
+**Teste:** `http://localhost:3000/echo?msg=<script>alert('XSS')</script>`| 0 | Info | Pipeline continua |
 
-**Teste:** `http://localhost:3000/admin?file=../../../etc/passwd`
 
-3. **🔍 Scan:** OWASP ZAP executa baseline scan
 
----
-
-```bash4. **📋 Análise:** Conta vulnerabilidades por severidade
-
-**D) Headers de Segurança Ausentes (Medium)**
-
-# Total de alertas5. **🚨 Validação:** Falha se High/Critical > 0
+#### b) SQL Injection**Arquivo:** `.github/workflows/zap-ci.yml`## Estrutura do Projeto
 
 ```javascript
 
-app.use((req, res, next) => {jq '.site[0].alerts | length' zap-report.json6. **📄 Relatórios:** Gera HTML e JSON como artefatos
+app.get('/search', (req, res) => {---
 
-  res.set('X-Powered-by', 'Express/4.18.2'); // Version disclosure
+  const query = req.query.q;
 
-  // NÃO define: Content-Security-Policy, X-Frame-Options, X-Content-Type-Options
+  const sql = `SELECT * FROM users WHERE name = '${query}'`; // SQLi
+
+  res.send(`Buscando: ${sql}`);
+
+});### 3. Análise dos Resultados
+
+```
+
+**Teste:** `http://localhost:3000/search?q=' OR '1'='1````yaml```
+
+
+
+#### c) Path Traversal**Implementação:**
+
+```javascript
+
+app.get('/admin', (req, res) => {- Contagem total de alertas encontrados- name: OWASP ZAP Baseline Scanatv-19/
+
+  const file = req.query.file;
+
+  const path = `./uploads/${file}`; // Path Traversal- Distribuição por nível de severidade
+
+  res.send(`Acessando: ${path}`);
+
+});- Identificação dos 10 tipos mais comuns de vulnerabilidades  uses: zaproxy/action-baseline@v0.11.0├── .github/workflows/
+
+```
+
+**Teste:** `http://localhost:3000/admin?file=../../etc/passwd`- Relatório detalhado no GitHub Actions Summary
+
+
+
+#### d) Vulnerabilidades Passivas  with:│   └── zap-ci.yml           # Pipeline OWASP ZAP
+
+```javascript
+
+// Headers inseguros**Exemplo de Saída:**
+
+app.use((req, res, next) => {
+
+  res.setHeader('X-Powered-By', 'Express 4.18.0'); // Information Disclosure    target: 'http://localhost:3000'├── app.js                   # Aplicação vulnerável (Node.js/Express)
 
   next();
 
-});# Vulnerabilidades High/Critical### Critério de Falha:
+});```
+
+
+
+// Cookies sem segurançaResumo de Vulnerabilidades por Severidade:    cmd_options: '-a -m 3 -J zap-report.json -r zap-report.html'├── package.json             # Dependências
+
+res.cookie('session', '123456', { 
+
+  httpOnly: false,  // Vulnerável a XSS
+
+  secure: false     // Sem HTTPS obrigatório
+
+});| Severidade | Quantidade |```├── Dockerfile               # Container para testes
 
 ```
 
-jq '[.site[0].alerts[] | select(.riskcode=="3" or .riskcode=="4")] | length' zap-report.json```yaml
+|-----------|------------|
+
+### 5. Salvamento de Relatórios como Artifacts
+
+| Critical  | 0          |├── .zapbaseline             # Configuração do ZAP
+
+**Implementação:**
+
+- Upload automático via `actions/upload-artifact@v4`| High      | 3          |
+
+- Retenção de 30 dias
+
+- Executa sempre (`if: always()`) mesmo se pipeline falhar| Medium    | 7          |---└── README.md                # Documentação
+
+
+
+**Código:**| Low       | 12         |
+
+
+
+```yaml| Info      | 4          |└── 📖 README.md                      # Este arquivo
+
+- name: Upload dos Relatórios
+
+  uses: actions/upload-artifact@v4| Total     | 26         |
+
+  if: always()
+
+  with:### 2. Validação Automática de Vulnerabilidades```
+
+    name: zap-report-clickseguro
+
+    path: |Top 10 Vulnerabilidades mais Comuns:
+
+      zap-report.html
+
+      zap-report.json- Cross-Site Scripting (XSS) (3 ocorrências)
+
+    retention-days: 30
+
+```- SQL Injection (2 ocorrências)
+
+
+
+**Como acessar:**- Missing Security Headers (8 ocorrências)**Implementação:**---
+
+1. Acesse: `https://github.com/TomazVC/atv-19/actions`
+
+2. Clique no workflow desejado```
+
+3. Role até o final da página
+
+4. Procure pela seção "Artifacts"- Pipeline analisa o arquivo JSON gerado pelo ZAP
+
+5. Clique em "zap-report-clickseguro" para baixar o arquivo ZIP
+
+**Comando para análise local:**
+
+**Conteúdo do pacote:**
+
+- `zap-report.html` - Relatório visual completo- Conta vulnerabilidades por severidade (riskcode)## 🔧 Workflows Disponíveis
+
+- `zap-report.json` - Dados estruturados para análise programática
+
+```bash
 
 ---
 
-# Pipeline FALHA se encontrar:
+# Total de alertas- **Falha automaticamente** se encontrar High (riskcode=3) ou Critical (riskcode=4)
 
-**E) Cookie Inseguro (Medium)**
+## Como Executar
 
-# Listar tipos- Vulnerabilidades High (riskcode: 3)
+jq '.site[0].alerts | length' zap-report.json
 
-```javascript
+### Opção 1: GitHub Actions (Automático)
 
-res.cookie('sessionid', 'abc123', { jq -r '.site[0].alerts[] | .name' zap-report.json | sort | uniq -c | sort -nr- Vulnerabilidades Critical (riskcode: 4)
+- Deploy é bloqueado em caso de vulnerabilidades críticas### 1. `zap-ci.yml` - Pipeline Principal
 
-  secure: false,      // Não requer HTTPS
+1. Faça um push para o repositório:
 
-  httpOnly: false,    // Acessível via JavaScript```
+```bash# Vulnerabilidades High/Critical
 
-  sameSite: 'none'    // Permite CSRF
+git add .
 
-});# Pipeline PASSA se apenas:
+git commit -m "test: trigger security scan"jq '[.site[0].alerts[] | select(.riskcode=="3" or .riskcode=="4")] | length' zap-report.json- **Alvo:** OWASP Juice Shop (aplicação vulnerável conhecida)
+
+git push origin main
 
 ```
 
----- Info (riskcode: 0)
+
+
+2. Acesse: `https://github.com/TomazVC/atv-19/actions`# Listar tipos**Lógica de Bloqueio:**- **Tipo:** Baseline Scan (passivo + spider)
+
+
+
+3. Aguarde a execução (~2-3 minutos)jq -r '.site[0].alerts[] | .name' zap-report.json | sort | uniq -c | sort -nr
+
+
+
+4. Baixe os artifacts no final da página do workflow```- **Duração:** ~5-7 minutos
+
+
+
+### Opção 2: Teste Local com Docker
+
+
+
+1. Clone o repositório:**Exemplo de Análise Real:**```bash- **Uso:** Validação geral do pipeline
+
+```bash
+
+git clone https://github.com/TomazVC/atv-19.git
+
+cd atv-19
+
+```Após executar o pipeline contra a aplicação ClickSeguro, obtemos resultados como:if [ "$high" -gt 0 ] || [ "$critical" -gt 0 ]; then
+
+
+
+2. Inicie a aplicação:
+
+```bash
+
+npm install```  echo "Vulnerabilidades críticas detectadas!"### 2. `zap-vulnerable-app.yml` - App ClickSeguro
+
+npm start
+
+```Resumo Detalhado de Vulnerabilidades:
+
+
+
+3. Em outro terminal, execute o ZAP:  exit 1  # Falha o pipeline- **Alvo:** Aplicação Node.js customizada
+
+```bash
+
+docker run --rm \| Severidade | Quantidade | Descrição |
+
+  --network="host" \
+
+  -v $(pwd):/zap/wrk:rw \|-----------|------------|-----------|fi- **Vulnerabilidades:** XSS, SQL Injection, Path Traversal
+
+  -t ghcr.io/zaproxy/zaproxy:stable \
+
+  zap-full-scan.py \| Critical  | 0          | Nenhuma vulnerabilidade crítica |
+
+  -t http://localhost:3000 \
+
+  -r zap-report.html \| High      | 3          | XSS, SQL Injection, Path Traversal |```- **Duração:** ~3-5 minutos  
+
+  -J zap-report.json \
+
+  -a -j -m 3| Medium    | 7          | Cookie sem flag secure, Version disclosure |
+
+```
+
+| Low       | 12         | Headers ausentes, Informações expostas |- **Uso:** Teste com vulnerabilidades específicas
+
+4. Verifique os relatórios gerados:
+
+```bash| Info      | 4          | Avisos informativos |
+
+ls -lh zap-report.*
+
+```| Total     | 26         | Total de alertas encontrados |**Critérios:**
+
+
+
+### Opção 3: Manual Dispatch
+
+
+
+1. Acesse: `https://github.com/TomazVC/atv-19/actions`Top 10 Vulnerabilidades Detectadas:---
+
+2. Clique em "OWASP ZAP Security Scan - ClickSeguro"
+
+3. Clique em "Run workflow"
+
+4. Selecione a branch `main`
+
+5. Clique em "Run workflow" novamente1. Cross-Site Scripting (XSS) - 3 ocorrências| Risk Code | Severidade | Comportamento |
+
+
+
+---   Localização: /echo, /search, /admin
+
+
+
+## Troubleshooting   Severidade: High|-----------|------------|---------------|## 🎯 Vulnerabilidades Implementadas
+
+
+
+### Problema: Relatórios vazios (0 vulnerabilidades detectadas)   
+
+
+
+**Sintomas:**2. SQL Injection - 2 ocorrências| 4 | Critical | BLOQUEIA pipeline |
+
+- JSON contém apenas: `{"site":[{"alerts":[]}]}`
+
+- HTML mostra placeholder em vez de relatório real   Localização: /search, /user
+
+- Pipeline passa (verde) mas não deveria
+
+   Severidade: High| 3 | High | BLOQUEIA pipeline |### 1. **XSS Refletido**
+
+**Causas Possíveis:**
+
+   
+
+1. **ZAP não consegue acessar localhost** - Problema de rede com `--network="host"`
+
+2. **Scan muito rápido** - Tempo insuficiente para explorar rotas3. Path Traversal - 1 ocorrência| 2 | Medium | Pipeline continua |```
+
+3. **ZAP travou/falhou** - Flag `|| true` mascara erros
+
+   Localização: /admin?file=
+
+**Soluções:**
+
+   Severidade: High| 1 | Low | Pipeline continua |URL: /echo?q=<script>alert('XSS')</script>
+
+#### Solução 1: Verificar logs do step "Executa OWASP ZAP Full Scan"
+
+```bash   
+
+# No workflow, adicione:
+
+docker run ... 2>&1 | tee zap-scan.log4. Missing Anti-clickjacking Header - 8 ocorrências| 0 | Info | Pipeline continua |Severidade: High
+
+```
+
+   Headers: X-Frame-Options ausente
+
+#### Solução 2: Testar conectividade antes do scan
+
+```yaml   Severidade: MediumDescrição: Entrada não sanitizada refletida na página
+
+- name: Verifica conectividade
+
+  run: |   
+
+    curl -v http://localhost:3000/health
+
+    curl -v http://localhost:3000/5. Cookie Without Secure Flag - 5 ocorrências---```
+
+    curl -v "http://localhost:3000/search?q=test"
+
+```   Cookies: sessionid, user_pref
+
+
+
+#### Solução 3: Usar Baseline Scan primeiro (para testar)   Severidade: Medium
+
+```yaml
+
+# Substitua zap-full-scan.py por:   
+
+zap-baseline.py -t http://localhost:3000
+
+```6. Server Leaks Version Information - 2 ocorrências### 3. Análise dos Resultados### 2. **SQL Injection Simulado**
+
+
+
+#### Solução 4: Aumentar timeout e configurar spider   Header: X-Powered-By: Express/4.18.2
+
+```bash
+
+docker run ... \   Severidade: Low```
+
+  -t http://localhost:3000 \
+
+  -m 10 \
+
+  -T 600 \
+
+  -z "-config spider.maxDuration=5 -config ajaxSpider.maxDuration=5"Resultado: Pipeline FALHOU devido a 3 vulnerabilidades High**Implementação:**URL: /search?service=' OR '1'='1
+
+```
+
+```
+
+#### Solução 5: Remover `|| true` para ver erro real
+
+```yaml- Contagem total de alertas encontradosSeveridade: High  
+
+# Remova o "|| true" do final do comando docker run
+
+# Isso fará a pipeline falhar se o ZAP tiver erroEste exemplo demonstra como o ZAP identifica e classifica as vulnerabilidades, permitindo análise detalhada antes do deploy.
+
+```
+
+- Distribuição por nível de severidadeDescrição: Query SQL construída sem sanitização
+
+### Problema: Erro "Dependencies lock file is not found"
+
+---
+
+**Sintoma:**
+
+```- Identificação dos 10 tipos mais comuns de vulnerabilidades```
+
+Dependencies lock file is not found in /home/runner/work/atv-19/atv-19. 
+
+Supported file patterns: package-lock.json,npm-shrinkwrap.json,yarn.lock### 4. Teste com Vulnerabilidade Proposital
+
+```
+
+- Relatório detalhado no GitHub Actions Summary
+
+**Causa:** A configuração `cache: 'npm'` no setup do Node.js requer um lock file.
+
+**Aplicação Desenvolvida:** Node.js com Express (`app.js`)
+
+**Solução:** Remover cache ou gerar package-lock.json
+
+```yaml### 3. **Path Traversal**
+
+# Opção 1: Remover cache
+
+- name: Setup Node.js#### Vulnerabilidades Implementadas:
+
+  uses: actions/setup-node@v4
+
+  with:**Exemplo de Saída:**```
+
+    node-version: '18'
+
+    # cache: 'npm'  <- Removido**A) XSS Refletido (High)**
+
+
+
+# Opção 2: Gerar lock fileURL: /admin?file=../../../etc/passwd
+
+npm install  # Gera package-lock.json automaticamente
+
+git add package-lock.json```javascript
+
+git commit -m "chore: add package-lock.json"
+
+```app.get('/echo', (req, res) => {```Severidade: Medium
+
+
+
+### Problema: Pipeline não executa  const userInput = req.query.q || '';
+
+
+
+**Sintomas:**  // VULNERÁVEL: Sem sanitizaçãoResumo de Vulnerabilidades por Severidade:Descrição: Acesso a arquivos fora do diretório permitido
+
+- Workflow aparece mas não inicia
+
+- Erro de sintaxe YAML  res.send(`<div>${userInput}</div>`);
+
+
+
+**Soluções:**});```
+
+
+
+1. **Validar YAML:**```
+
+```bash
+
+# Use um validador online| Severidade | Quantidade |
+
+# https://www.yamllint.com/
+
+```**Teste:** `http://localhost:3000/echo?q=<script>alert('XSS')</script>`
+
+
+
+2. **Verificar indentação:**|-----------|------------|### 4. **Headers de Segurança Ausentes**
+
+```yaml
+
+# YAML é sensível a espaços!---
+
+steps:
+
+  - name: Step 1| Critical  | 0          |```
+
+    run: echo "2 espaços de indentação"
+
+```**B) SQL Injection (High)**
+
+
+
+3. **Evitar heredoc em YAML:**| High      | 3          |Missing: Content-Security-Policy, X-Frame-Options, X-Content-Type-Options
+
+```yaml
+
+# Não use:```javascript
+
+cat > file.html << 'EOF'
+
+conteúdoapp.get('/search', (req, res) => {| Medium    | 7          |Severidade: Low/Medium
+
+EOF
+
+  const service = req.query.service || '';
+
+# Use:
+
+echo 'linha1' > file.html  // VULNERÁVEL: Query sem prepared statement| Low       | 12         |Descrição: Falta de cabeçalhos de segurança padrão
+
+echo 'linha2' >> file.html
+
+```  const query = `SELECT * FROM services WHERE name = '${service}'`;
+
+
+
+---  res.send(`Query: ${query}`);| Info      | 4          |```
+
+
+
+## Exemplo de Análise de Vulnerabilidades});
+
+
+
+### Cenário: SQL Injection Detectada```| Total     | 26         |
+
+
+
+**Relatório JSON:**
+
+```json
+
+{**Teste:** `http://localhost:3000/search?service=' OR '1'='1`---
+
+  "site": [{
+
+    "alerts": [{
+
+      "pluginid": "40018",
+
+      "alertRef": "40018",---Top 10 Vulnerabilidades mais Comuns:
+
+      "name": "SQL Injection",
+
+      "riskcode": "3",
+
+      "confidence": "2",
+
+      "riskdesc": "High (Medium)",**C) Path Traversal (High)**- Cross-Site Scripting (XSS) (3 ocorrências)## 📊 Como Funciona o Pipeline
+
+      "desc": "SQL injection may be possible.",
+
+      "instances": [{
+
+        "uri": "http://localhost:3000/search",
+
+        "method": "GET",```javascript- SQL Injection (2 ocorrências)
+
+        "param": "q",
+
+        "attack": "' OR '1'='1",app.get('/admin', (req, res) => {
+
+        "evidence": "SELECT * FROM users WHERE name = '' OR '1'='1'"
+
+      }],  const file = req.query.file || 'dashboard.html';- Missing Security Headers (8 ocorrências)### Fluxo Automático:
+
+      "solution": "Use prepared statements with parameterized queries"
+
+    }]  // VULNERÁVEL: Sem validação de path
+
+  }]
+
+}  const filePath = `/var/www/admin/${file}`;```
+
+```
+
+  res.send(`Acessando: ${filePath}`);
+
+**Análise:**
+
+- **Vulnerabilidade:** SQL Injection});1. **🚀 Trigger:** Push/PR para `main` ou `develop`
+
+- **Severidade:** High (riskcode=3)
+
+- **Endpoint:** `/search?q=...````
+
+- **Parâmetro vulnerável:** `q`
+
+- **Exploit:** `' OR '1'='1`**Comando para análise local:**2. **📦 Setup:** Instala dependências e sobe aplicação
+
+
+
+**Impacto:****Teste:** `http://localhost:3000/admin?file=../../../etc/passwd`
+
+- Acesso não autorizado ao banco de dados
+
+- Leitura de dados sensíveis3. **🔍 Scan:** OWASP ZAP executa baseline scan
+
+- Possível modificação/exclusão de dados
+
+---
+
+**Correção:**
+
+```javascript```bash4. **📋 Análise:** Conta vulnerabilidades por severidade
+
+// Antes (vulnerável):
+
+const sql = `SELECT * FROM users WHERE name = '${query}'`;**D) Headers de Segurança Ausentes (Medium)**
+
+
+
+// Depois (seguro):# Total de alertas5. **🚨 Validação:** Falha se High/Critical > 0
+
+const sql = 'SELECT * FROM users WHERE name = ?';
+
+db.query(sql, [query], (err, results) => { ... });```javascript
+
+```
+
+app.use((req, res, next) => {jq '.site[0].alerts | length' zap-report.json6. **📄 Relatórios:** Gera HTML e JSON como artefatos
+
+**Pipeline:**
+
+```  res.set('X-Powered-by', 'Express/4.18.2'); // Version disclosure
+
+Pipeline Status: FAILED ❌
+
+Motivo: 1 vulnerabilidade High detectada  // NÃO define: Content-Security-Policy, X-Frame-Options, X-Content-Type-Options
+
+Deploy: BLOQUEADO
+
+```  next();
+
+
+
+---});# Vulnerabilidades High/Critical### Critério de Falha:
+
+
+
+## Referências```
+
+
+
+- **OWASP ZAP:** https://www.zaproxy.org/jq '[.site[0].alerts[] | select(.riskcode=="3" or .riskcode=="4")] | length' zap-report.json```yaml
+
+- **GitHub Actions:** https://docs.github.com/en/actions
+
+- **OWASP Top 10:** https://owasp.org/www-project-top-ten/---
+
+- **ZAP Docker Images:** https://www.zaproxy.org/docs/docker/
+
+- **ZAP Automation Framework:** https://www.zaproxy.org/docs/automate/automation-framework/# Pipeline FALHA se encontrar:
+
+
+
+---**E) Cookie Inseguro (Medium)**
+
+
+
+## Conclusão# Listar tipos- Vulnerabilidades High (riskcode: 3)
+
+
+
+Este projeto demonstra uma implementação completa de DevSecOps com:```javascript
+
+
+
+✅ **Testes automatizados** - Scan em cada push/PR  res.cookie('sessionid', 'abc123', { jq -r '.site[0].alerts[] | .name' zap-report.json | sort | uniq -c | sort -nr- Vulnerabilidades Critical (riskcode: 4)
+
+✅ **Validação de severidade** - Bloqueio automático de vulnerabilidades críticas  
+
+✅ **Análise detalhada** - Relatórios HTML/JSON com métricas    secure: false,      // Não requer HTTPS
+
+✅ **Vulnerabilidades intencionais** - Aplicação de teste com XSS, SQLi, etc  
+
+✅ **Artifacts salvos** - Histórico de scans disponível por 30 dias    httpOnly: false,    // Acessível via JavaScript```
+
+
+
+**Status Atual:** Pipeline funcional mas relatórios vazios (0 vulnerabilidades detectadas). Requer investigação para garantir que o ZAP está escaneando corretamente a aplicação.  sameSite: 'none'    // Permite CSRF
+
+
+
+**Próximos Passos Sugeridos:**});# Pipeline PASSA se apenas:
+
+1. Adicionar logs detalhados do ZAP no workflow
+
+2. Testar conectividade localhost antes do scan```
+
+3. Aumentar timeout e configurar spider adequadamente
+
+4. Validar que as rotas vulneráveis estão sendo acessadas pelo ZAP---- Info (riskcode: 0)
+
+5. Considerar usar ZAP Automation Framework para mais controle
 
 **Detecção pelo ZAP:**
 
+---
+
 - Low (riskcode: 1)  
 
-O OWASP ZAP Full Scan detecta todas estas vulnerabilidades através de:
+**Repositório:** https://github.com/TomazVC/atv-19  
 
-- **Scan Ativo:** Injeta payloads para testar XSS, SQLi, Path Traversal### 4. Teste com Vulnerabilidade Proposital- Medium (riskcode: 2)
+**Autor:** Tomaz Vinícius Costa  O OWASP ZAP Full Scan detecta todas estas vulnerabilidades através de:
+
+**Curso:** FIAP - Segurança da Informação  
+
+**Atividade:** 19 - OWASP ZAP CLI no GitHub Actions- **Scan Ativo:** Injeta payloads para testar XSS, SQLi, Path Traversal### 4. Teste com Vulnerabilidade Proposital- Medium (riskcode: 2)
+
 
 - **Scan Passivo:** Analisa headers, cookies e configurações
 
