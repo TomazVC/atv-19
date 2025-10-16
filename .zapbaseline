@@ -1,0 +1,21 @@
+# Configuração personalizada do OWASP ZAP
+# Este arquivo permite customizar o comportamento do scan
+
+# IGNORE: Ignora completamente estas regras/alertas
+# WARN: Rebaixa para Warning (não falha o pipeline)
+# FAIL: Força falha (padrão para High/Critical)
+
+# Exemplo: Ignorar alertas específicos
+# IGNORE (scanruleid:10015)  # Directoy Browsing
+# IGNORE (scanruleid:10017)  # Cross-Domain Misconfiguration
+
+# Exemplo: Ignorar por URL pattern  
+# IGNORE (url:*/static/*)
+# IGNORE (url:*/assets/*)
+
+# Exemplo: Rebaixar severidade por nome
+# WARN (name:X-Content-Type-Options*)
+# WARN (name:X-Frame-Options*)
+
+# Para este projeto educacional, mantenha tudo ativo
+# Descomente as linhas acima conforme necessário

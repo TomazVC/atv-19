@@ -1,0 +1,16 @@
+{
+  "name": "clickseguro-vulnerable-app",
+  "version": "1.0.0",
+  "description": "Aplicação ClickSeguro com vulnerabilidade intencional para teste do OWASP ZAP",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "keywords": ["security", "owasp", "zap", "vulnerable", "test"],
+  "author": "ClickSeguro Team",
+  "license": "MIT"
+}
